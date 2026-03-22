@@ -7,6 +7,7 @@ import {
 } from "lucide-react"
 
 import { DashboardHitRow } from "@/components/dashboard/dashboard-hit-row"
+import { QualifiedDashboardToolbar } from "@/components/dashboard/qualified-dashboard-toolbar"
 import { StatRow } from "@/components/dashboard/stat-row"
 import { Button } from "@/components/ui/button"
 import { useDashboardLists } from "@/lib/use-dashboard-lists"
@@ -96,9 +97,17 @@ export function DashboardPanel() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
-      <p className="shrink-0 text-[0.65rem] leading-snug text-muted-foreground">
-        {hint}
-      </p>
+      {view === "qualified" ? (
+        <QualifiedDashboardToolbar
+          hint={hint}
+          profiles={qualified.map((q) => q.profile)}
+          copyDisabled={loading}
+        />
+      ) : (
+        <p className="shrink-0 text-[0.65rem] leading-snug text-muted-foreground">
+          {hint}
+        </p>
+      )}
       {loading ? (
         <p className="shrink-0 text-xs text-muted-foreground">Loading…</p>
       ) : isEmpty ? (
