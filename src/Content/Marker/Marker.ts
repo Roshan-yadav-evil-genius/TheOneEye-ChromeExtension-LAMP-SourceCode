@@ -1,4 +1,4 @@
-import { THE_ONE_EYE_MARKER_CLASS } from "./constants.ts"
+import { THE_ONE_EYE_MARKER_CLASS } from "../constants.ts"
 
 export interface TheOneEyeOptions {
   float?: boolean

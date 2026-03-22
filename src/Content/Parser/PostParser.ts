@@ -1,5 +1,5 @@
 import { XPATH_POST } from "../constants.ts"
-import { placeScoringButton } from "../Marker.ts"
+import { placeScoringButton } from "../Marker/Marker.ts"
 import type { Post,Profile} from "../types.ts"
 import {
   collectImgSrcsFromSnapshot,

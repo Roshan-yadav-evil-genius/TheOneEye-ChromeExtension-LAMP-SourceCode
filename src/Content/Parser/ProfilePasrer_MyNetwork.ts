@@ -1,5 +1,5 @@
 import { XPATH_MYNETWORK } from "../constants.ts"
-import { placeScoringButton } from "../Marker.ts"
+import { placeScoringButton } from "../Marker/Marker.ts"
 import type { Profile } from "../types.ts"
 import { xpathFirstNode, xpathOrderedSnapshot } from "../utils/dom.ts"
 import { extractDirectTextList } from "../utils/text.ts"

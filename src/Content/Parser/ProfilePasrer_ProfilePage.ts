@@ -3,7 +3,7 @@
  * Dedicated /in/... profile page parsing can be added here or in a separate module later.
  */
 import { XPATH_RECOMMENDED } from "../constants.ts"
-import { placeScoringButton } from "../Marker.ts"
+import { placeScoringButton } from "../Marker/Marker.ts"
 import type { Profile } from "../types.ts"
 import { xpathFirstNode, xpathOrderedSnapshot } from "../utils/dom.ts"
 import { isValidLinkedInProfileUrl } from "../utils/url.ts"
