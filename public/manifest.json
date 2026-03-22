@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Lamp",
+  "version": "0.0.1",
+  "description": "Lamp(LinkedIn Amplifier) Product of TheOneEye",
+  "action": {
+    "default_title": "Lamp",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "serviceWorker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "TheOneEyeSymbol.png",
+    "48": "TheOneEyeSymbol.png",
+    "128": "TheOneEyeSymbol.png"
+  }
+}
