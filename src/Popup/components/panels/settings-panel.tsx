@@ -114,8 +114,8 @@ export function SettingsPanel() {
               wrapperClassName="block w-full"
             >
               <Slider
-                min={1}
-                max={10}
+                min={SCORING_THRESHOLD_MIN}
+                max={SCORING_THRESHOLD_MAX}
                 step={1}
                 value={[profile.threshold]}
                 onValueChange={([v]) => setProfile({ threshold: v })}

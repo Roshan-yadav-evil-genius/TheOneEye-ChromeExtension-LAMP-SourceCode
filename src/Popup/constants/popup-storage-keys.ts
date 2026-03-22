@@ -6,5 +6,7 @@ export const INTENTION_PROFILE = "intention_profile" as const
 export const INTENTION_POST = "intention_post" as const
 export const INTENTION_KEYWORDS = "intention_keywords" as const
 
-export const SETTINGS_PROFILE_SCORING = "settings_profile_scoring" as const
-export const SETTINGS_POST_SCORING = "settings_post_scoring" as const
+export {
+  SETTINGS_POST_SCORING,
+  SETTINGS_PROFILE_SCORING,
+} from "../../shared/scoring-storage-keys.ts"
