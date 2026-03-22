@@ -2,8 +2,11 @@
  * Runs in page contexts matched by manifest `content_scripts`.
  * Keep this entry self-contained to avoid extra chunk files in the extension package.
  */
+import { startLinkedInPageScan } from "./scanner.ts"
+
 function init(): void {
-  // Example: observe or augment the DOM; wire messaging to the service worker as needed.
+  if (!location.hostname.endsWith("linkedin.com")) return
+  startLinkedInPageScan()
 }
 
 if (document.readyState === "loading") {
