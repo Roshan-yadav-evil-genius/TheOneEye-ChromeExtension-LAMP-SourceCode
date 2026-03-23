@@ -1,6 +1,6 @@
 import type { Post, Profile } from "../Content/types.ts"
 import { getIntentionFromChrome } from "../shared/get-intention-from-chrome.ts"
-import { getScoringThresholdsFromChrome } from "../shared/get-scoring-thresholds.ts"
+import { getScoringSettingsFromChrome } from "../shared/get-scoring-settings-from-chrome.ts"
 import { delayMs } from "./utils/delay.ts"
 import { incrementScoreStatsAfterEmit } from "./utils/increment-score-stats.ts"
 import { emitMarkerScoreError, emitMarkerScoreResult } from "./utils/score-marker-emit.ts"
@@ -27,18 +27,18 @@ export function registerScoreMarkerListener(): void {
       const { markerId, kind, data } = message
       console.log("scoreMarkerHandler", message)
       try {
-        const [thresholds, intention] = await Promise.all([
-          getScoringThresholdsFromChrome(),
+        const [settings, intention] = await Promise.all([
+          getScoringSettingsFromChrome(),
           getIntentionFromChrome(),
         ])
         await delayMs(SCORE_DELAY_MS)
 
         const score =
           kind === "profile"
-            ? scoreLinkedInProfile(data as Profile, intention)
-            : scoreLinkedInPost(data as Post, intention)
+            ? scoreLinkedInProfile(data as Profile, intention, settings)
+            : scoreLinkedInPost(data as Post, intention, settings)
         const threshold =
-          kind === "post" ? thresholds.post : thresholds.profile
+          kind === "post" ? settings.post.threshold : settings.profile.threshold
 
         await emitMarkerScoreResult(tabId, {
           markerId,
