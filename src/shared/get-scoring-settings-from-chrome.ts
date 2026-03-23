@@ -89,3 +89,15 @@ export async function getScoringSettingsFromChrome(): Promise<ScoringSettingsBun
     post: mergePost(postPartial),
   }
 }
+
+/** Whether profile/post scoring sections are enabled (markers may be shown). */
+export async function getScoringSectionEnabledFromChrome(): Promise<{
+  profile: boolean
+  post: boolean
+}> {
+  const s = await getScoringSettingsFromChrome()
+  return {
+    profile: s.profile.sectionEnabled,
+    post: s.post.sectionEnabled,
+  }
+}

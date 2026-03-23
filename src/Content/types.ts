@@ -21,6 +21,12 @@ export interface LinkedInParseResult {
   posts: Post[]
 }
 
+/** Gating for marker placement from scoring settings `sectionEnabled`. */
+export type ScoringSectionFlags = {
+  profile: boolean
+  post: boolean
+}
+
 export type MarkerKind = "profile" | "post"
 
 export type MarkerInteractionPayload =

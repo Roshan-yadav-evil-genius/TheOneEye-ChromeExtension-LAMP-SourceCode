@@ -4,9 +4,3 @@
 import { registerScoreMarkerListener } from "./scoreMarkerHandler.ts"
 
 registerScoreMarkerListener()
-
-chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
-    // First install
-  }
-})

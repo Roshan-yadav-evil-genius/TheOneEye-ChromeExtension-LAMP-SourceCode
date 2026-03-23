@@ -19,17 +19,9 @@ export default defineConfig({
     rollupOptions: {
       input: {
         popup: path.resolve(__dirname, "popup.html"),
-        content: path.resolve(__dirname, "src/Content/index.ts"),
-        serviceWorker: path.resolve(__dirname, "src/Service/index.ts"),
       },
       output: {
-        entryFileNames(chunkInfo) {
-          if (
-            chunkInfo.name === "content" ||
-            chunkInfo.name === "serviceWorker"
-          ) {
-            return "[name].js"
-          }
+        entryFileNames() {
           return "assets/[name]-[hash].js"
         },
         chunkFileNames: "assets/[name]-[hash].js",

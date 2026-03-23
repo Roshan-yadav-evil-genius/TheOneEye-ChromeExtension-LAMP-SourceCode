@@ -1,4 +1,5 @@
 import { THE_ONE_EYE_MARKER_CLASS } from "../constants.ts"
+import { clearAutoscoreBusyIfMatches } from "../marker-autoscore-busy.ts"
 import type {
   MarkerDomState,
   MarkerInteractionPayload,
@@ -30,6 +31,9 @@ export const MARKER_KIND_ATTRIBUTE = "data-kind" as const
  */
 export const MARKER_STATE_ATTRIBUTE = "data-marker-state" as const
 
+/** Saved inline `position` on float hosts before `position: relative` is applied. */
+const HOST_FLOAT_POSITION_ATTR = "data-oe-marker-float-position-prev" as const
+
 const markerPayloads = new WeakMap<
   HTMLButtonElement,
   MarkerInteractionPayload
@@ -43,7 +47,7 @@ let interactionHandler: ((payload: MarkerInteractionPayload) => void) | null =
   null
 
 function defaultInteractionHandler(payload: MarkerInteractionPayload): void {
-  console.log("[TheOneEye marker]", payload)
+  void payload
 }
 
 export function setMarkerInteractionHandler(
@@ -125,6 +129,9 @@ function createEyeContainer(
   { float = true }: TheOneEyeOptions = {}
 ): HTMLButtonElement | null {
   if (float) {
+    if (!host.hasAttribute(HOST_FLOAT_POSITION_ATTR)) {
+      host.setAttribute(HOST_FLOAT_POSITION_ATTR, host.style.position)
+    }
     host.style.position = "relative"
   }
   if (host.querySelector(`.${THE_ONE_EYE_MARKER_CLASS}`)) return null
@@ -334,4 +341,45 @@ export function placeScoringButton(
   })
 
   return id
+}
+
+export type RemoveScoringButtonOptions = TheOneEyeOptions & {
+  kind?: MarkerKind
+}
+
+/**
+ * Removes a marker inside `host` if present. Restores float host `position` when applicable.
+ * Clears autoscore busy state for the removed marker id.
+ */
+export function removeScoringButton(
+  host: HTMLElement | null,
+  options?: RemoveScoringButtonOptions
+): string | null {
+  if (!host) return null
+
+  const float = options?.float !== false
+  const kindFilter = options?.kind
+
+  const btn = host.querySelector(`button.${THE_ONE_EYE_MARKER_CLASS}`)
+  if (!(btn instanceof HTMLButtonElement)) return null
+
+  const domKind = btn.getAttribute(MARKER_KIND_ATTRIBUTE) as MarkerKind | null
+  if (kindFilter && domKind !== kindFilter) return null
+
+  cancelSpinner(btn)
+  markerPayloads.delete(btn)
+  const id = btn.id
+  btn.remove()
+
+  if (float && host.hasAttribute(HOST_FLOAT_POSITION_ATTR)) {
+    const prev = host.getAttribute(HOST_FLOAT_POSITION_ATTR) ?? ""
+    host.style.position = prev
+    host.removeAttribute(HOST_FLOAT_POSITION_ATTR)
+  }
+
+  if (domKind === "profile" || domKind === "post") {
+    clearAutoscoreBusyIfMatches(id, domKind)
+  }
+
+  return id || null
 }

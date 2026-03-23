@@ -3,12 +3,14 @@
  * Dedicated /in/... profile page parsing can be added here or in a separate module later.
  */
 import { XPATH_RECOMMENDED } from "../constants.ts"
-import { placeScoringButton } from "../Marker/Marker.ts"
-import type { Profile } from "../types.ts"
+import { placeScoringButton, removeScoringButton } from "../Marker/Marker.ts"
+import type { Profile, ScoringSectionFlags } from "../types.ts"
 import { xpathFirstNode, xpathOrderedSnapshot } from "../utils/dom.ts"
 import { isValidLinkedInProfileUrl } from "../utils/url.ts"
 
-export function parseRecommendedProfiles(): Profile[] {
+export function parseRecommendedProfiles(
+  section: ScoringSectionFlags
+): Profile[] {
   const parsedProfiles: Profile[] = []
   const profiles = xpathOrderedSnapshot(XPATH_RECOMMENDED.profile)
 
@@ -62,7 +64,11 @@ export function parseRecommendedProfiles(): Profile[] {
       headline,
     }
 
-    placeScoringButton(node, { kind: "profile", data: profile })
+    if (section.profile) {
+      placeScoringButton(node, { kind: "profile", data: profile })
+    } else {
+      removeScoringButton(node, { kind: "profile" })
+    }
     parsedProfiles.push(profile)
   }
 

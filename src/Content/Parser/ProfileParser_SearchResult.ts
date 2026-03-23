@@ -1,6 +1,6 @@
 import { XPATH_SEARCH_RESULTS_PROFILES } from "../constants.ts"
-import { placeScoringButton } from "../Marker/Marker.ts"
-import type { Profile } from "../types.ts"
+import { placeScoringButton, removeScoringButton } from "../Marker/Marker.ts"
+import type { Profile, ScoringSectionFlags } from "../types.ts"
 import { xpathFirstNode, xpathOrderedSnapshot } from "../utils/dom.ts"
 import { isValidLinkedInProfileUrl, tryParseUrl } from "../utils/url.ts"
 
@@ -15,7 +15,9 @@ function extractSearchResultHeadline(profileWrapper: ParentNode): string | null 
   return text || null
 }
 
-export function parseSearchResultsProfiles(): Profile[] {
+export function parseSearchResultsProfiles(
+  section: ScoringSectionFlags
+): Profile[] {
   const parsedProfiles: Profile[] = []
   const profiles = xpathOrderedSnapshot(
     XPATH_SEARCH_RESULTS_PROFILES.profileWrapper
@@ -58,7 +60,11 @@ export function parseSearchResultsProfiles(): Profile[] {
       headline,
     }
 
-    placeScoringButton(node, { kind: "profile", data: profile })
+    if (section.profile) {
+      placeScoringButton(node, { kind: "profile", data: profile })
+    } else {
+      removeScoringButton(node, { kind: "profile" })
+    }
     parsedProfiles.push(profile)
   }
 

@@ -1,11 +1,13 @@
 import { XPATH_MYNETWORK } from "../constants.ts"
-import { placeScoringButton } from "../Marker/Marker.ts"
-import type { Profile } from "../types.ts"
+import { placeScoringButton, removeScoringButton } from "../Marker/Marker.ts"
+import type { Profile, ScoringSectionFlags } from "../types.ts"
 import { xpathFirstNode, xpathOrderedSnapshot } from "../utils/dom.ts"
 import { extractDirectTextList } from "../utils/text.ts"
 import { isValidLinkedInProfileUrl } from "../utils/url.ts"
 
-export function parseMyNetworkProfiles(): Profile[] {
+export function parseMyNetworkProfiles(
+  section: ScoringSectionFlags
+): Profile[] {
   const parsedProfiles: Profile[] = []
   const profiles = xpathOrderedSnapshot(XPATH_MYNETWORK.profile)
 
@@ -57,7 +59,11 @@ export function parseMyNetworkProfiles(): Profile[] {
       headline: profileHeadline,
     }
 
-    placeScoringButton(node, { kind: "profile", data: profile })
+    if (section.profile) {
+      placeScoringButton(node, { kind: "profile", data: profile })
+    } else {
+      removeScoringButton(node, { kind: "profile" })
+    }
     parsedProfiles.push(profile)
   }
 

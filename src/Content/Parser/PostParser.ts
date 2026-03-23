@@ -1,6 +1,6 @@
 import { XPATH_POST } from "../constants.ts"
-import { placeScoringButton } from "../Marker/Marker.ts"
-import type { Post, Profile } from "../types.ts"
+import { placeScoringButton, removeScoringButton } from "../Marker/Marker.ts"
+import type { Post, Profile, ScoringSectionFlags } from "../types.ts"
 import {
   collectImgSrcsFromSnapshot,
   xpathFirstNode,
@@ -8,7 +8,7 @@ import {
 } from "../utils/dom.ts"
 import { parseRelativeTimeToDate } from "../utils/time.ts"
 
-export function parsePosts(): Post[] {
+export function parsePosts(section: ScoringSectionFlags): Post[] {
   const extractedPosts: Post[] = []
   const postNodes = xpathOrderedSnapshot(XPATH_POST.container)
 
@@ -68,7 +68,6 @@ export function parsePosts(): Post[] {
 
     let profileHeadline: string | null = null
     let rawTimeText: string | null = null
-    // let followersCount: string | null = null
 
     if (rowCount >= 3) {
       if (profileUrl?.includes("/in/")) {
@@ -80,13 +79,7 @@ export function parsePosts(): Post[] {
         rawTimeText =
           xpathFirstNode(XPATH_POST.individualTime, authorWrapper)?.textContent?.trim() ??
           null
-
       } else if (profileUrl?.includes("/company/")) {
-        // followersCount =
-        //   xpathFirstNode(
-        //     XPATH_POST.companyFollowers,
-        //     authorWrapper
-        //   )?.textContent?.trim() ?? null
         rawTimeText =
           xpathFirstNode(XPATH_POST.companyTime, authorWrapper)?.textContent?.trim() ??
           null
@@ -102,16 +95,12 @@ export function parsePosts(): Post[] {
     const postedDate = parseRelativeTimeToDate(rawTimeText)
     const postedDateIso = postedDate?.toISOString() ?? null
 
-
-
-    
     const publisher: Profile = {
       avatar: profileImage ? [profileImage] : [],
       name: profileName ?? "",
       url: profileUrl ?? "",
       headline: profileHeadline ?? "",
     }
-    
 
     const postData: Post = {
       publisher,
@@ -124,16 +113,25 @@ export function parsePosts(): Post[] {
 
     if (!(profileUrl && profileName && postBody)) continue
 
-    placeScoringButton(postBody, {
-      float: false,
-      kind: "post",
-      data: postData,
-    })
-    if (authorWrapper instanceof HTMLElement) {
-      placeScoringButton(authorWrapper, {
-        kind: "profile",
-        data: publisher,
+    if (section.post) {
+      placeScoringButton(postBody, {
+        float: false,
+        kind: "post",
+        data: postData,
       })
+    } else {
+      removeScoringButton(postBody, { float: false, kind: "post" })
+    }
+
+    if (authorWrapper instanceof HTMLElement) {
+      if (section.profile) {
+        placeScoringButton(authorWrapper, {
+          kind: "profile",
+          data: publisher,
+        })
+      } else {
+        removeScoringButton(authorWrapper, { kind: "profile" })
+      }
     }
 
     extractedPosts.push(postData)

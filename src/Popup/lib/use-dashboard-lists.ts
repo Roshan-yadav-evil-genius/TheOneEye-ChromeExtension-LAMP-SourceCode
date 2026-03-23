@@ -35,9 +35,16 @@ export function useDashboardLists(): {
   }, [])
 
   useEffect(() => {
-    void refresh()
+    let cancelled = false
+    void readDashboardLists().then((next) => {
+      if (cancelled) return
+      setSnapshot(next)
+      setLoading(false)
+    })
     if (typeof chrome === "undefined" || !chrome.storage?.onChanged) {
-      return
+      return () => {
+        cancelled = true
+      }
     }
     const handler: Parameters<
       typeof chrome.storage.onChanged.addListener
@@ -49,9 +56,10 @@ export function useDashboardLists(): {
     }
     chrome.storage.onChanged.addListener(handler)
     return () => {
+      cancelled = true
       chrome.storage.onChanged.removeListener(handler)
     }
-  }, [refresh])
+  }, [])
 
   const dropHit = useCallback(
     (id: string) => {

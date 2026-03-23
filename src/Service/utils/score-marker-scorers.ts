@@ -4,35 +4,24 @@ import type { ScoringSettingsBundle } from "../../shared/get-scoring-settings-fr
 
 /** Placeholder: replace with real profile scoring. */
 export function scoreLinkedInProfile(
-  _data: Profile,
-  _intention: ScoringIntentionSnapshot,
-  _settings: ScoringSettingsBundle
+  data: Profile,
+  intention: ScoringIntentionSnapshot,
+  settings: ScoringSettingsBundle
 ): number {
-  const payload = {
-    data: _data,
-    intention: _intention,
-    profileSettings: _settings.profile,
-  }
-  console.log("scoreLinkedInProfile", payload)
+  void data
+  void intention
+  void settings
   return Math.floor(Math.random() * 101)
 }
 
 /** Placeholder: replace with real post scoring. */
 export function scoreLinkedInPost(
-  _data: Post,
-  _intention: ScoringIntentionSnapshot,
-  _settings: ScoringSettingsBundle
+  data: Post,
+  intention: ScoringIntentionSnapshot,
+  settings: ScoringSettingsBundle
 ): number {
-  const payload = {
-    data: _data,
-    intention: _intention,
-  }
-  // const settings = _settings.post
-
-  // const PARSED_POST_SCORING_DATA = ""_
-
-
-
-  console.log("scoreLinkedInPost", payload)
+  void data
+  void intention
+  void settings
   return Math.floor(Math.random() * 101)
 }

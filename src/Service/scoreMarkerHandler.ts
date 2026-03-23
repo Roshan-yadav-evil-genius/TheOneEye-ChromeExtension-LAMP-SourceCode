@@ -25,7 +25,6 @@ export function registerScoreMarkerListener(): void {
 
     void (async () => {
       const { markerId, kind, data } = message
-      console.log("scoreMarkerHandler", message)
       try {
         const [settings, intention] = await Promise.all([
           getScoringSettingsFromChrome(),

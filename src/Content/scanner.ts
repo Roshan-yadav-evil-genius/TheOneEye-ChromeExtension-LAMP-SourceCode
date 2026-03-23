@@ -1,11 +1,14 @@
 import { tickAutoscoreAfterScan } from "./marker-autoscore.ts"
 import { runAllLinkedInParsers } from "./Parser/index.ts"
+import { getScoringSectionEnabledFromChrome } from "../shared/get-scoring-settings-from-chrome.ts"
 
 let linkedInPageScanTimerId: ReturnType<typeof setInterval> | null = null
 
 function runScanCycle(): void {
-  runAllLinkedInParsers()
-  tickAutoscoreAfterScan()
+  void getScoringSectionEnabledFromChrome().then((section) => {
+    runAllLinkedInParsers(section)
+    tickAutoscoreAfterScan()
+  })
 }
 
 export function startLinkedInPageScan(intervalMs = 1000): ReturnType<
