@@ -4,8 +4,16 @@ import {
   formatScoreRuntimeError,
   notifyError,
 } from "./Notifier/index.ts"
+import { tryRestoreProfileMarkerFromCache } from "./try-restore-profile-marker-from-cache.ts"
 import type { MarkerInteractionPayload } from "./types.ts"
 import { buildEnrichedLinkedInProfilePayloadForContent } from "./VoyagerApi/index.ts"
+
+async function restoreCachedProfileScoreOrDefault(markerId: string): Promise<void> {
+  const restored = await tryRestoreProfileMarkerFromCache(markerId)
+  if (!restored) {
+    updateMarkerState(markerId, { state: "default" })
+  }
+}
 
 export const SCORE_MARKER_MESSAGE_TYPE = "scoreMarker" as const
 
@@ -47,33 +55,32 @@ export function requestMarkerScore(
         enrichedProfile,
       } as const
       console.log("[SCORE][REQUEST] sending message to service", message)
-      chrome.runtime.sendMessage(
-        message,
-        () => {
-          if (chrome.runtime.lastError) {
-            console.error("[SCORE][REQUEST][ERROR] sendMessage lastError", {
-              markerId: payload.id,
-              kind: payload.kind,
-              error: chrome.runtime.lastError,
-            })
-            updateMarkerState(payload.id, { state: "default" })
-            notifyError(formatScoreRuntimeError())
-            options?.onSendFailed?.()
-            return
-          }
-          console.log("[SCORE][REQUEST] message accepted by runtime", {
+      chrome.runtime.sendMessage(message, () => {
+        if (chrome.runtime.lastError) {
+          console.error("[SCORE][REQUEST][ERROR] sendMessage lastError", {
             markerId: payload.id,
             kind: payload.kind,
+            error: chrome.runtime.lastError,
           })
+          void (async () => {
+            await restoreCachedProfileScoreOrDefault(payload.id)
+            notifyError(formatScoreRuntimeError())
+            options?.onSendFailed?.()
+          })()
+          return
         }
-      )
+        console.log("[SCORE][REQUEST] message accepted by runtime", {
+          markerId: payload.id,
+          kind: payload.kind,
+        })
+      })
     } catch (error) {
       console.error("[SCORE][REQUEST][ERROR] failed before sendMessage", {
         markerId: payload.id,
         kind: payload.kind,
         error,
       })
-      updateMarkerState(payload.id, { state: "default" })
+      await restoreCachedProfileScoreOrDefault(payload.id)
       notifyError(formatScoreEnrichmentError())
       options?.onSendFailed?.()
     }

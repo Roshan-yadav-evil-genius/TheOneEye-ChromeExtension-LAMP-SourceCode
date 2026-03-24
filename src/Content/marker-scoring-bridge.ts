@@ -11,6 +11,7 @@ import {
 } from "./Notifier/index.ts"
 import { notifyAutoscoreScoreFinished } from "./marker-autoscore.ts"
 import { requestMarkerScore } from "./score-request.ts"
+import { tryRestoreProfileMarkerFromCache } from "./try-restore-profile-marker-from-cache.ts"
 import type { MarkerInteractionPayload, MarkerKind } from "./types.ts"
 import { getScoringSettingsFromChrome } from "../shared/get-scoring-settings-from-chrome.ts"
 import {
@@ -153,18 +154,28 @@ export function registerMarkerScoringBridge(): void {
       console.error("[SCORE][BRIDGE][ERROR] error message received", message)
       notifyError(formatScoreServiceError(message.error))
       if (message.markerId) {
-        updateMarkerState(message.markerId, { state: "default" })
-        console.log("[SCORE][BRIDGE] marker state reset to default", {
-          markerId: message.markerId,
-        })
-        const kind = readMarkerKindFromDom(message.markerId)
-        if (kind) {
-          notifyAutoscoreScoreFinished(message.markerId, kind)
-          console.log("[SCORE][BRIDGE] autoscore notified after error", {
-            markerId: message.markerId,
-            kind,
-          })
-        }
+        const markerId = message.markerId
+        void (async () => {
+          const restored = await tryRestoreProfileMarkerFromCache(markerId)
+          if (!restored) {
+            updateMarkerState(markerId, { state: "default" })
+            console.log("[SCORE][BRIDGE] marker state reset to default", {
+              markerId,
+            })
+          } else {
+            console.log("[SCORE][BRIDGE] marker restored from cache after error", {
+              markerId,
+            })
+          }
+          const kind = readMarkerKindFromDom(markerId)
+          if (kind) {
+            notifyAutoscoreScoreFinished(markerId, kind)
+            console.log("[SCORE][BRIDGE] autoscore notified after error", {
+              markerId,
+              kind,
+            })
+          }
+        })()
       }
       return
     }
