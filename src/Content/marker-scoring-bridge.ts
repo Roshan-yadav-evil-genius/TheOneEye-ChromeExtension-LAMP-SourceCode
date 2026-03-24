@@ -2,11 +2,17 @@ import { appendDashboardThresholdHit } from "./append-dashboard-threshold-hit.ts
 import {
   MARKER_KIND_ATTRIBUTE,
   setMarkerInteractionHandler,
+  setProfileMarkerPlacedHandler,
   updateMarkerState,
 } from "./Marker/Marker.ts"
 import { notifyAutoscoreScoreFinished } from "./marker-autoscore.ts"
 import { requestMarkerScore } from "./score-request.ts"
 import type { MarkerInteractionPayload, MarkerKind } from "./types.ts"
+import { getScoringSettingsFromChrome } from "../shared/get-scoring-settings-from-chrome.ts"
+import {
+  getCachedProfileScore,
+  setCachedProfileScore,
+} from "../shared/profile-score-cache.ts"
 
 const MARKER_SCORE_RESULT_TYPE = "markerScoreResult" as const
 const MARKER_SCORE_ERROR_TYPE = "markerScoreError" as const
@@ -57,7 +63,33 @@ function readMarkerKindFromDom(markerId: string): MarkerKind | null {
   return null
 }
 
+function profileCacheKeyFromScoreData(data: unknown): string | null {
+  if (!data || typeof data !== "object") return null
+  const url = (data as { url?: unknown }).url
+  return typeof url === "string" && url.length > 0 ? url : null
+}
+
 export function registerMarkerScoringBridge(): void {
+  setProfileMarkerPlacedHandler(({ markerId, data }) => {
+    void (async () => {
+      try {
+        const settings = await getScoringSettingsFromChrome()
+        if (!settings.profile.useCache) return
+        const key = data.url
+        if (!key) return
+        const score = await getCachedProfileScore(key)
+        if (score === null) return
+        updateMarkerState(markerId, {
+          state: "score",
+          score,
+          threshold: settings.profile.threshold,
+        })
+      } catch {
+        /* ignore cache hydrate failures */
+      }
+    })()
+  })
+
   chrome.runtime.onMessage.addListener((message) => {
     if (isMarkerScoreResultMessage(message)) {
       console.log("[SCORE][BRIDGE] result message received", message)
@@ -66,6 +98,19 @@ export function registerMarkerScoringBridge(): void {
         score: message.score,
         threshold: message.threshold,
       })
+      if (message.kind === "profile") {
+        void (async () => {
+          try {
+            const settings = await getScoringSettingsFromChrome()
+            if (!settings.profile.useCache) return
+            const key = profileCacheKeyFromScoreData(message.data)
+            if (!key) return
+            await setCachedProfileScore(key, message.score)
+          } catch {
+            /* ignore cache write failures */
+          }
+        })()
+      }
       console.log("[SCORE][BRIDGE] marker state updated to score", {
         markerId: message.markerId,
         kind: message.kind,

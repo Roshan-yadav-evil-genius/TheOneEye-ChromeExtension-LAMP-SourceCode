@@ -46,6 +46,21 @@ let autoscorePostActive = false
 let interactionHandler: ((payload: MarkerInteractionPayload) => void) | null =
   null
 
+export type ProfileMarkerPlacedPayload = {
+  markerId: string
+  data: Profile
+}
+
+let profileMarkerPlacedHandler: ((
+  payload: ProfileMarkerPlacedPayload
+) => void) | null = null
+
+export function setProfileMarkerPlacedHandler(
+  handler: ((payload: ProfileMarkerPlacedPayload) => void) | null
+): void {
+  profileMarkerPlacedHandler = handler
+}
+
 function defaultInteractionHandler(payload: MarkerInteractionPayload): void {
   console.warn("[SCORE][CLICK] no interaction handler registered", {
     markerId: payload.id,
@@ -363,6 +378,12 @@ export function placeScoringButton(
     }
     console.warn("[SCORE][CLICK] missing marker payload", { markerId: id, kind })
   })
+
+  if (kind === "profile") {
+    queueMicrotask(() => {
+      profileMarkerPlacedHandler?.({ markerId: id, data })
+    })
+  }
 
   return id
 }

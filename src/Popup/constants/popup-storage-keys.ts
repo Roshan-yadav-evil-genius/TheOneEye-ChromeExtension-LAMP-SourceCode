@@ -12,6 +12,8 @@ export {
   SETTINGS_PROFILE_SCORING,
 } from "../../shared/scoring-storage-keys.ts"
 
+export { PROFILE_SCORE_CACHE } from "../../shared/profile-score-cache-storage-key.ts"
+
 export {
   DASHBOARD_POST_HITS,
   DASHBOARD_PROFILE_HITS,
