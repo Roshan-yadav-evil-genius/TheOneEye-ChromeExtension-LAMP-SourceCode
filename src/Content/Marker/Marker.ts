@@ -47,7 +47,11 @@ let interactionHandler: ((payload: MarkerInteractionPayload) => void) | null =
   null
 
 function defaultInteractionHandler(payload: MarkerInteractionPayload): void {
-  void payload
+  console.warn("[SCORE][CLICK] no interaction handler registered", {
+    markerId: payload.id,
+    kind: payload.kind,
+    payload,
+  })
 }
 
 export function setMarkerInteractionHandler(
@@ -333,11 +337,31 @@ export function placeScoringButton(
   applyAutoscoreDisabledToButton(eyeContainer)
 
   eyeContainer.addEventListener("click", () => {
-    if (eyeContainer.disabled) return
+    const markerState = eyeContainer.getAttribute(MARKER_STATE_ATTRIBUTE)
+    console.log("[SCORE][CLICK] marker clicked", {
+      markerId: id,
+      kind,
+      disabled: eyeContainer.disabled,
+      markerState,
+    })
+    if (eyeContainer.disabled) {
+      console.warn("[SCORE][CLICK] click ignored because disabled", {
+        markerId: id,
+        kind,
+      })
+      return
+    }
     const p = markerPayloads.get(eyeContainer)
     if (p) {
+      console.log("[SCORE][CLICK] dispatch interaction payload", {
+        markerId: p.id,
+        kind: p.kind,
+        payload: p,
+      })
       resolveInteractionHandler()(p)
+      return
     }
+    console.warn("[SCORE][CLICK] missing marker payload", { markerId: id, kind })
   })
 
   return id

@@ -8,6 +8,7 @@ export async function emitMarkerScoreResult(
   tabId: number,
   payload: TabMarkerScorePayload
 ): Promise<void> {
+  console.log("[SCORE][EMIT] sending score result", { tabId, payload })
   await chrome.tabs.sendMessage(tabId, {
     type: MARKER_SCORE_RESULT_TYPE,
     markerId: payload.markerId,
@@ -24,12 +25,23 @@ export async function emitMarkerScoreError(
   error: string
 ): Promise<void> {
   try {
+    console.error("[SCORE][EMIT][ERROR] sending score error", {
+      tabId,
+      markerId,
+      error,
+    })
     await chrome.tabs.sendMessage(tabId, {
       type: MARKER_SCORE_ERROR_TYPE,
       markerId,
       error,
     })
-  } catch {
+  } catch (sendError) {
+    console.error("[SCORE][EMIT][ERROR] failed to send score error", {
+      tabId,
+      markerId,
+      error,
+      sendError,
+    })
     // Tab may have navigated away
   }
 }

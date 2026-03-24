@@ -8,30 +8,65 @@ export function requestMarkerScore(
   payload: MarkerInteractionPayload,
   options?: { onSendFailed?: () => void }
 ): void {
+  console.log("[SCORE][REQUEST] start", {
+    markerId: payload.id,
+    kind: payload.kind,
+    payload,
+  })
   updateMarkerState(payload.id, { state: "loading" })
   void (async () => {
     try {
+      const enrichStartedAt = Date.now()
+      if (payload.kind === "profile") {
+        console.log("[SCORE][REQUEST] profile enrichment start", {
+          markerId: payload.id,
+        })
+      }
       const enrichedProfile =
         payload.kind === "profile"
           ? await buildEnrichedLinkedInProfilePayloadForContent(payload.data)
           : undefined
-
-      chrome.runtime.sendMessage(
-        {
-          type: SCORE_MARKER_MESSAGE_TYPE,
+      if (payload.kind === "profile") {
+        console.log("[SCORE][REQUEST] profile enrichment done", {
           markerId: payload.id,
-          kind: payload.kind,
-          data: payload.data,
+          durationMs: Date.now() - enrichStartedAt,
           enrichedProfile,
-        },
+        })
+      }
+
+      const message = {
+        type: SCORE_MARKER_MESSAGE_TYPE,
+        markerId: payload.id,
+        kind: payload.kind,
+        data: payload.data,
+        enrichedProfile,
+      } as const
+      console.log("[SCORE][REQUEST] sending message to service", message)
+      chrome.runtime.sendMessage(
+        message,
         () => {
           if (chrome.runtime.lastError) {
+            console.error("[SCORE][REQUEST][ERROR] sendMessage lastError", {
+              markerId: payload.id,
+              kind: payload.kind,
+              error: chrome.runtime.lastError,
+            })
             updateMarkerState(payload.id, { state: "default" })
             options?.onSendFailed?.()
+            return
           }
+          console.log("[SCORE][REQUEST] message accepted by runtime", {
+            markerId: payload.id,
+            kind: payload.kind,
+          })
         }
       )
-    } catch {
+    } catch (error) {
+      console.error("[SCORE][REQUEST][ERROR] failed before sendMessage", {
+        markerId: payload.id,
+        kind: payload.kind,
+        error,
+      })
       updateMarkerState(payload.id, { state: "default" })
       options?.onSendFailed?.()
     }

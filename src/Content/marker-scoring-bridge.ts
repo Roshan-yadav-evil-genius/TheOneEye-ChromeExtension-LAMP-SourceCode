@@ -60,28 +60,60 @@ function readMarkerKindFromDom(markerId: string): MarkerKind | null {
 export function registerMarkerScoringBridge(): void {
   chrome.runtime.onMessage.addListener((message) => {
     if (isMarkerScoreResultMessage(message)) {
+      console.log("[SCORE][BRIDGE] result message received", message)
       updateMarkerState(message.markerId, {
         state: "score",
         score: message.score,
         threshold: message.threshold,
       })
+      console.log("[SCORE][BRIDGE] marker state updated to score", {
+        markerId: message.markerId,
+        kind: message.kind,
+        score: message.score,
+        threshold: message.threshold,
+      })
       notifyAutoscoreScoreFinished(message.markerId, message.kind)
+      console.log("[SCORE][BRIDGE] autoscore notified score finished", {
+        markerId: message.markerId,
+        kind: message.kind,
+      })
       if (message.score >= message.threshold) {
+        console.log("[SCORE][BRIDGE] threshold hit, appending dashboard item", {
+          markerId: message.markerId,
+          kind: message.kind,
+          score: message.score,
+          threshold: message.threshold,
+          data: message.data,
+        })
         void appendDashboardThresholdHit({
           kind: message.kind,
           data: message.data,
           score: message.score,
           threshold: message.threshold,
-        }).catch(() => {})
+        }).catch((error) => {
+          console.error("[SCORE][BRIDGE][ERROR] append threshold hit failed", {
+            markerId: message.markerId,
+            kind: message.kind,
+            error,
+          })
+        })
       }
       return
     }
     if (isMarkerScoreErrorMessage(message)) {
+      console.error("[SCORE][BRIDGE][ERROR] error message received", message)
       if (message.markerId) {
         updateMarkerState(message.markerId, { state: "default" })
+        console.log("[SCORE][BRIDGE] marker state reset to default", {
+          markerId: message.markerId,
+        })
         const kind = readMarkerKindFromDom(message.markerId)
         if (kind) {
           notifyAutoscoreScoreFinished(message.markerId, kind)
+          console.log("[SCORE][BRIDGE] autoscore notified after error", {
+            markerId: message.markerId,
+            kind,
+          })
         }
       }
       return
@@ -89,6 +121,11 @@ export function registerMarkerScoringBridge(): void {
   })
 
   setMarkerInteractionHandler((payload: MarkerInteractionPayload) => {
+    console.log("[SCORE][BRIDGE] marker interaction forwarded", {
+      markerId: payload.id,
+      kind: payload.kind,
+      payload,
+    })
     requestMarkerScore(payload)
   })
 }

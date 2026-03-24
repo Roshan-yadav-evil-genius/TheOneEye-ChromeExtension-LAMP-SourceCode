@@ -22,7 +22,12 @@ async function executeScoringWorkflow(
   input: unknown
 ): Promise<number> {
   const body = TheOneEyeServerCompatiblePayload(input)
-  console.log("body", body)
+  const startedAt = Date.now()
+  console.log("[SCORE][API] workflow request start", {
+    workflowId,
+    url: `${SCORE_API_BASE}/${workflowId}/execute/`,
+    body,
+  })
   const response = await fetch(
     `${SCORE_API_BASE}/${workflowId}/execute/`,
     {
@@ -31,12 +36,23 @@ async function executeScoringWorkflow(
       body: JSON.stringify(body),
     }
   )
-  console.log("response", response)
+  console.log("[SCORE][API] workflow response received", {
+    workflowId,
+    ok: response.ok,
+    status: response.status,
+    statusText: response.statusText,
+    durationMs: Date.now() - startedAt,
+    response,
+  })
   if (!response.ok) {
     throw new Error(`score_api_http_${response.status}`)
   }
 
   const responseBody = (await response.json()) as { score?: unknown }
+  console.log("[SCORE][API] workflow response body parsed", {
+    workflowId,
+    responseBody,
+  })
   if (
     typeof responseBody.score !== "number" ||
     Number.isNaN(responseBody.score)
@@ -46,7 +62,14 @@ async function executeScoringWorkflow(
 
   // Backend returns score in 0..1. Convert to extension's 0..100 range.
   const normalizedScore = Math.round(responseBody.score * 100)
-  return Math.max(0, Math.min(100, normalizedScore))
+  const clampedScore = Math.max(0, Math.min(100, normalizedScore))
+  console.log("[SCORE][API] normalized score", {
+    workflowId,
+    rawScore: responseBody.score,
+    normalizedScore,
+    clampedScore,
+  })
+  return clampedScore
 }
 
 /**
