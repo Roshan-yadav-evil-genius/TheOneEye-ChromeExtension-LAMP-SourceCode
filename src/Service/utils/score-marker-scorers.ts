@@ -1,63 +1,77 @@
-import type { Post, Profile } from "../../Content/types.ts"
+import type { Post } from "../../Content/types.ts"
+import type { EnrichedLinkedInProfilePayload } from "../../Content/VoyagerApi/types.ts"
 import type { ScoringIntentionSnapshot } from "../../shared/get-intention-from-chrome.ts"
 import type { ScoringSettingsBundle } from "../../shared/get-scoring-settings-from-chrome.ts"
 
-/** Placeholder: replace with real profile scoring. */
-export function scoreLinkedInProfile(
-  data: Profile,
-  intention: ScoringIntentionSnapshot,
-  settings: ScoringSettingsBundle
-): number {
-  const payload ={
-    data,
-    intention,
-  }
-  void settings
-  console.log("scoreLinkedInProfile", payload)
-  return Math.floor(Math.random() * 101)
-}
+const SCORE_API_BASE = "http://127.0.0.1:7878/api/workflow"
+const POST_WORKFLOW_ID = "f141f826-c899-4d2b-83d6-300b0e8eb02d"
+const PROFILE_WORKFLOW_ID = "26f0a457-b6d6-47fe-bea1-b991d097d48e"
 
-const TheOneEyeServerCompatiblePayload = (payload:any)=>{
-  return {
-    input:payload,
-    timeout:30000,
-  }
-}
+const SCORE_API_HEADERS = {
+  "Content-Type": "application/json",
+  Authorization: "Api-Key PjLdurRlGML4dxrTH-hJew0j-rgJ2MwWzDBRczrrlRs",
+} as const
 
-/** Placeholder: replace with real post scoring. */
-export async function scoreLinkedInPost(
-  data: Post,
-  intention: ScoringIntentionSnapshot,
-  settings: ScoringSettingsBundle
+const TheOneEyeServerCompatiblePayload = (payload: unknown) => ({
+  input: payload,
+  timeout: 30000,
+})
+
+async function executeScoringWorkflow(
+  workflowId: string,
+  input: unknown
 ): Promise<number> {
-  const _payload ={
-    data,
-    intention:{objective:intention.postDescription,Keywords:intention.keywords},
-  }
-  void settings
-
-  const payload = TheOneEyeServerCompatiblePayload(_payload)
-
-  const response = await fetch("http://127.0.0.1:7878/api/workflow/f141f826-c899-4d2b-83d6-300b0e8eb02d/execute/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Api-Key PjLdurRlGML4dxrTH-hJew0j-rgJ2MwWzDBRczrrlRs",
-    },
-    body: JSON.stringify(payload),
-  })
-
+  const body = TheOneEyeServerCompatiblePayload(input)
+  console.log("body", body)
+  const response = await fetch(
+    `${SCORE_API_BASE}/${workflowId}/execute/`,
+    {
+      method: "POST",
+      headers: SCORE_API_HEADERS,
+      body: JSON.stringify(body),
+    }
+  )
+  console.log("response", response)
   if (!response.ok) {
     throw new Error(`score_api_http_${response.status}`)
   }
 
   const responseBody = (await response.json()) as { score?: unknown }
-  console.log("scoreLinkedInPost", responseBody)
-  if (typeof responseBody.score !== "number" || Number.isNaN(responseBody.score)) {
+  if (
+    typeof responseBody.score !== "number" ||
+    Number.isNaN(responseBody.score)
+  ) {
     throw new Error("score_api_invalid_response")
   }
 
   // Backend returns score in 0..1. Convert to extension's 0..100 range.
   const normalizedScore = Math.round(responseBody.score * 100)
   return Math.max(0, Math.min(100, normalizedScore))
+}
+
+/**
+ * Sends the full enriched profile payload as workflow `input` (wrapped by
+ * TheOneEyeServerCompatiblePayload).
+ */
+export async function scoreLinkedInProfile(
+  profilePayload: EnrichedLinkedInProfilePayload
+): Promise<number> {
+  return executeScoringWorkflow(PROFILE_WORKFLOW_ID, profilePayload)
+}
+
+export async function scoreLinkedInPost(
+  data: Post,
+  intention: ScoringIntentionSnapshot,
+  settings: ScoringSettingsBundle
+): Promise<number> {
+  const input = {
+    data,
+    intention: {
+      objective: intention.postDescription,
+      Keywords: intention.keywords,
+    },
+  }
+  void settings
+
+  return executeScoringWorkflow(POST_WORKFLOW_ID, input)
 }

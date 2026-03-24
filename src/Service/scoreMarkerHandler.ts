@@ -34,7 +34,14 @@ export function registerScoreMarkerListener(): void {
 
         const score =
           kind === "profile"
-            ? scoreLinkedInProfile(data as Profile, intention, settings)
+            ? await scoreLinkedInProfile(
+                message.enrichedProfile ?? {
+                  raw: data as Profile,
+                  api: {},
+                  intention,
+                  settings,
+                }
+              )
             : await scoreLinkedInPost(data as Post, intention, settings)
         const threshold =
           kind === "post" ? settings.post.threshold : settings.profile.threshold
