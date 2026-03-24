@@ -1,4 +1,9 @@
 import { updateMarkerState } from "./Marker/Marker.ts"
+import {
+  formatScoreEnrichmentError,
+  formatScoreRuntimeError,
+  notifyError,
+} from "./Notifier/index.ts"
 import type { MarkerInteractionPayload } from "./types.ts"
 import { buildEnrichedLinkedInProfilePayloadForContent } from "./VoyagerApi/index.ts"
 
@@ -52,6 +57,7 @@ export function requestMarkerScore(
               error: chrome.runtime.lastError,
             })
             updateMarkerState(payload.id, { state: "default" })
+            notifyError(formatScoreRuntimeError())
             options?.onSendFailed?.()
             return
           }
@@ -68,6 +74,7 @@ export function requestMarkerScore(
         error,
       })
       updateMarkerState(payload.id, { state: "default" })
+      notifyError(formatScoreEnrichmentError())
       options?.onSendFailed?.()
     }
   })()

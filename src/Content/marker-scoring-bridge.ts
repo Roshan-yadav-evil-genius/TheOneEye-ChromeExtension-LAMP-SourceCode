@@ -5,6 +5,10 @@ import {
   setProfileMarkerPlacedHandler,
   updateMarkerState,
 } from "./Marker/Marker.ts"
+import {
+  formatScoreServiceError,
+  notifyError,
+} from "./Notifier/index.ts"
 import { notifyAutoscoreScoreFinished } from "./marker-autoscore.ts"
 import { requestMarkerScore } from "./score-request.ts"
 import type { MarkerInteractionPayload, MarkerKind } from "./types.ts"
@@ -147,6 +151,7 @@ export function registerMarkerScoringBridge(): void {
     }
     if (isMarkerScoreErrorMessage(message)) {
       console.error("[SCORE][BRIDGE][ERROR] error message received", message)
+      notifyError(formatScoreServiceError(message.error))
       if (message.markerId) {
         updateMarkerState(message.markerId, { state: "default" })
         console.log("[SCORE][BRIDGE] marker state reset to default", {

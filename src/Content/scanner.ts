@@ -1,3 +1,4 @@
+import { ensureNotificationContainer } from "./Notifier/index.ts"
 import { tickAutoscoreAfterScan } from "./marker-autoscore.ts"
 import { runAllLinkedInParsers } from "./Parser/index.ts"
 import { getScoringSectionEnabledFromChrome } from "../shared/get-scoring-settings-from-chrome.ts"
@@ -5,6 +6,7 @@ import { getScoringSectionEnabledFromChrome } from "../shared/get-scoring-settin
 let linkedInPageScanTimerId: ReturnType<typeof setInterval> | null = null
 
 function runScanCycle(): void {
+  ensureNotificationContainer()
   void getScoringSectionEnabledFromChrome().then((section) => {
     runAllLinkedInParsers(section)
     tickAutoscoreAfterScan()
