@@ -3,10 +3,20 @@ import {
   formatScoreEnrichmentError,
   formatScoreRuntimeError,
   notifyError,
+  notifyInfo,
 } from "../Notifier/index.ts"
 import { tryRestoreProfileMarkerFromCache } from "./restore-from-cache.ts"
 import type { MarkerInteractionPayload } from "../types.ts"
 import { buildEnrichedLinkedInProfilePayloadForContent } from "../VoyagerApi/index.ts"
+
+function scoringStartMessage(payload: MarkerInteractionPayload): string {
+  if (payload.kind === "profile") {
+    const personName = payload.data.name.trim() || "profile"
+    return `Scoring ${personName}...`
+  }
+  const personName = payload.data.publisher.name.trim() || "unknown person"
+  return `Scoring post of ${personName}...`
+}
 
 /** Restores profile score from cache or sets marker to error. */
 async function restoreCachedProfileScoreOrError(markerId: string): Promise<void> {
@@ -33,6 +43,7 @@ export function requestMarkerScore(
     kind: payload.kind,
     payload,
   })
+  notifyInfo(scoringStartMessage(payload))
   updateMarkerState(payload.id, { state: "loading" })
   void (async () => {
     try {

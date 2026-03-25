@@ -24,7 +24,10 @@ const XPATH_POST = {
 export function matchesFeedPostsLocation(loc: Location): boolean {
   if (!matchesExtensionHost(loc)) return false
   const p = loc.pathname.replace(/\/+$/, "") || "/"
-  return p === "/" || p === "/feed" || p.startsWith("/feed/")
+  const feed_page = p.includes("/feed/")
+  const search_page = p.includes("/search/results")
+
+  return feed_page || search_page
 }
 
 /** Extracts feed post and author profile markers from the home/feed DOM via XPath. */
@@ -87,12 +90,6 @@ export function parseFeedPosts(): ParsedMarkerInstruction[] {
           xpathFirstNode(XPATH_POST.individualTime, authorWrapper)?.textContent?.trim() ??
           null
       }
-    } else if (rowCount === 2) {
-      rawTimeText =
-        xpathFirstNode(
-          XPATH_POST.companyShortTime,
-          authorWrapper
-        )?.textContent?.trim() ?? null
     }
 
     const postedDate = parseRelativeTimeToDate(rawTimeText)

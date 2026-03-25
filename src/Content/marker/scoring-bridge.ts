@@ -8,6 +8,7 @@ import {
 import {
   formatScoreServiceError,
   notifyError,
+  notifySuccess,
 } from "../Notifier/index.ts"
 import { notifyAutoscoreScoreFinished } from "./autoscore.ts"
 import { requestMarkerScore } from "./score-request.ts"
@@ -77,6 +78,33 @@ function profileCacheKeyFromScoreData(data: unknown): string | null {
   return typeof url === "string" && url.length > 0 ? url : null
 }
 
+function scoringSuccessMessage(kind: MarkerKind, data: unknown): string {
+  if (!data || typeof data !== "object") {
+    return kind === "profile"
+      ? "Successfully scored profile."
+      : "Successfully scored post."
+  }
+  if (kind === "profile") {
+    const personName = (data as { name?: unknown }).name
+    if (typeof personName === "string" && personName.trim()) {
+      return `Successfully scored ${personName.trim()}.`
+    }
+    return "Successfully scored profile."
+  }
+
+  const publisher = (data as { publisher?: unknown }).publisher
+  const personName =
+    publisher &&
+    typeof publisher === "object" &&
+    typeof (publisher as { name?: unknown }).name === "string"
+      ? ((publisher as { name?: string }).name ?? "").trim()
+      : ""
+  if (personName) {
+    return `Successfully scored post of ${personName}.`
+  }
+  return "Successfully scored post."
+}
+
 /**
  * Wires marker clicks to score requests and applies service worker score/error messages to the DOM.
  *
@@ -130,6 +158,7 @@ export function registerMarkerScoringBridge(): void {
         score: message.score,
         threshold: message.threshold,
       })
+      notifySuccess(scoringSuccessMessage(message.kind, message.data))
       notifyAutoscoreScoreFinished(message.markerId, message.kind)
       console.log("[SCORE][BRIDGE] autoscore notified score finished", {
         markerId: message.markerId,

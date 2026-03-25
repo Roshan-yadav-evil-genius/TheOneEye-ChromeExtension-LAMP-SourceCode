@@ -2,7 +2,7 @@ import type { ParsedMarkerInstruction } from "../../types.ts"
 import {
   matchesFeedPostsLocation,
   parseFeedPosts,
-} from "./feed-posts.parser.ts"
+} from "./individual-posts.parser.ts"
 import {
   matchesMyNetworkLocation,
   parseMyNetworkProfiles,
