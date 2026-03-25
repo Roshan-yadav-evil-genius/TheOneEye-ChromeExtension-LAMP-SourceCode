@@ -19,7 +19,7 @@ export const XPATH_RECOMMENDED = {
 
 export const XPATH_POST = {
   container:
-    "//div[count(a[contains(@href,'/in/')]) = 2 or count(a[contains(@href,'/company/')]) = 2]/parent::div[*[1][self::h2] and *[2][self::div] and p ]",
+    "//div[count(a[contains(@href,'/in/')]) = 2]/parent::div[*[1][self::h2] and *[2][self::div] and p ]",
   postBody: "./p",
   authorProfileLink: "./a[1]",
   authorProfileImg: "./a[1]//img",

@@ -79,10 +79,6 @@ export function parsePosts(section: ScoringSectionFlags): Post[] {
         rawTimeText =
           xpathFirstNode(XPATH_POST.individualTime, authorWrapper)?.textContent?.trim() ??
           null
-      } else if (profileUrl?.includes("/company/")) {
-        rawTimeText =
-          xpathFirstNode(XPATH_POST.companyTime, authorWrapper)?.textContent?.trim() ??
-          null
       }
     } else if (rowCount === 2) {
       rawTimeText =
