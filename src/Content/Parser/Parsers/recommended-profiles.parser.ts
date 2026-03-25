@@ -8,20 +8,21 @@ import { isValidLinkedInProfileUrl, matchesExtensionHost } from "../../utils/url
  */
 const XPATH_RECOMMENDED = {
   profile:
-    "//div[   count(.//a[contains(@href,'/in/')]) = 2   and   .//a[contains(@href,'/in/')][.//img or .//div[contains(@class,'ghost-person')]]   and   not(.//div[     count(.//a[contains(@href,'/in/')]) = 2     and     .//a[contains(@href,'/in/')][.//img or .//div[contains(@class,'ghost-person')]]   ]) ]",
+    "//div[   count(.//a[contains(@href,'/in/')]) = 2   and   .//a[contains(@href,'/in/')][.//figure]   and   not(.//div[     count(.//a[contains(@href,'/in/')]) = 2     and     .//a[contains(@href,'/in/')][.//figure]   ]) ]",
   links: ".//a[contains(@href,'/in/')]",
-  avatarImg: ".//a[contains(@href,'/in/')][1]//img",
-  ghostName:
-    ".//a[contains(@href,'/in/')][1]//div[contains(@class,'ghost-person')]",
+  avatarImg: ".//img",
+  name:
+    "./a[contains(@href,'/in/')]//a[contains(@href,'/in/')]",
   headline:
-    ".//a[contains(@href,'/in/') and not(.//img or .//div[contains(@class,'ghost-person')])]/*[2]",
+    "./a[contains(@href,'/in/')]/div/div/div[2]",
 } as const
 
 /** Main feed / home where recommended people cards appear. */
 export function matchesFeedRecommendedLocation(loc: Location): boolean {
   if (!matchesExtensionHost(loc)) return false
   const p = loc.pathname.replace(/\/+$/, "") || "/"
-  return p === "/" || p === "/feed" || p.startsWith("/feed/")
+  const profile_page = p.includes("/in")
+  return profile_page
 }
 
 /** Extracts “recommended for you” profile card markers from the main feed DOM. */
@@ -33,23 +34,14 @@ export function parseRecommendedProfiles(): ParsedMarkerInstruction[] {
     const node = profiles.snapshotItem(i)
     if (!(node instanceof HTMLElement)) continue
 
-    const links = xpathOrderedSnapshot(XPATH_RECOMMENDED.links, node)
-    let profileIdentifier: string | null = null
+    const link = xpathFirstNode(XPATH_RECOMMENDED.links, node)
 
-    for (let j = 0; j < links.snapshotLength; j++) {
-      const link = links.snapshotItem(j)
-      if (!(link instanceof HTMLAnchorElement)) continue
-      let url: URL
-      try {
-        url = new URL(link.href)
-      } catch {
-        continue
-      }
-      if (isValidLinkedInProfileUrl(url)) {
-        profileIdentifier = url.pathname
-        break
-      }
-    }
+    if (!(link instanceof HTMLAnchorElement)) continue
+
+    const url = new URL(link.href)
+    
+    if (!isValidLinkedInProfileUrl(url)) continue
+    const profileIdentifier = url.pathname
 
     if (!profileIdentifier) continue
 
@@ -59,18 +51,16 @@ export function parseRecommendedProfiles(): ParsedMarkerInstruction[] {
       avatarNode instanceof HTMLImageElement ? avatarNode : null
     if (imgEl) avatarAndCover.push(imgEl.src)
 
-    let name: string | null = imgEl?.alt ?? null
+    let name: string | null = xpathFirstNode(XPATH_RECOMMENDED.name, node)?.textContent?.trim() ?? null
 
-    if (!imgEl) {
-      const ghost = xpathFirstNode(XPATH_RECOMMENDED.ghostName, node)
-      name =
-        ghost?.textContent?.replace(/\s+/g, " ").trim() ?? null
-    }
 
     const headlineNode = xpathFirstNode(XPATH_RECOMMENDED.headline, node)
-    const headline = headlineNode?.textContent?.trim() ?? null
+    if (!(headlineNode instanceof HTMLElement)) continue
 
-    if (!(profileIdentifier && name && headline)) continue
+    const headline = headlineNode?.textContent?.trim() ?? null
+    if (!(profileIdentifier && name && headline)){
+      continue
+    }
 
     const profile: Profile = {
       url: profileIdentifier,
@@ -79,7 +69,7 @@ export function parseRecommendedProfiles(): ParsedMarkerInstruction[] {
       headline,
     }
 
-    out.push({ kind: "profile", anchor: node, data: profile })
+    out.push({ kind: "profile", anchor: link, data: profile })
   }
 
   return out

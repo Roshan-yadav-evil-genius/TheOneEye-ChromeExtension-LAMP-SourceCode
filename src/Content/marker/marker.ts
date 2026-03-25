@@ -154,6 +154,14 @@ function cancelSpinner(button: HTMLButtonElement): void {
   }
 }
 
+/**
+ * Stops the event from reaching a wrapping `<a>` (or other parents) so clicks score instead of navigating.
+ */
+function blockMarkerEventFromActivatingParentLink(event: Event): void {
+  event.preventDefault()
+  event.stopPropagation()
+}
+
 function createEyeContainer(
   host: HTMLElement,
   { float = true }: TheOneEyeOptions = {}
@@ -390,7 +398,15 @@ export function placeScoringButton(
   deformEyeUi(eyeContainer)
   applyAutoscoreDisabledToButton(eyeContainer)
 
-  eyeContainer.addEventListener("click", () => {
+  eyeContainer.addEventListener("pointerdown", blockMarkerEventFromActivatingParentLink, {
+    capture: true,
+  })
+  eyeContainer.addEventListener("mousedown", blockMarkerEventFromActivatingParentLink, {
+    capture: true,
+  })
+
+  eyeContainer.addEventListener("click", (event: MouseEvent) => {
+    blockMarkerEventFromActivatingParentLink(event)
     const markerState = eyeContainer.getAttribute(MARKER_STATE_ATTRIBUTE)
     console.log("[SCORE][CLICK] marker clicked", {
       markerId: id,

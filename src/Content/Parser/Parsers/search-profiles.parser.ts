@@ -20,7 +20,7 @@ function extractSearchResultHeadline(profileWrapper: ParentNode): string | null 
     profileWrapper
   )
   if (!nameParagraph) return null
-  const next = nameParagraph.nextSibling
+  const next = nameParagraph.parentElement?.nextElementSibling
   const text = next?.textContent?.replace(/\s+/g, " ").trim() ?? null
   return text || null
 }

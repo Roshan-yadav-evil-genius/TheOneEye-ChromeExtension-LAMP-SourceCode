@@ -18,6 +18,27 @@ const TheOneEyeServerCompatiblePayload = (payload: unknown) => ({
   timeout: 30000,
 })
 
+/** Reads error response text/JSON; returns empty string if nothing usable. */
+function parseScoreApiHttpErrorDetail(rawText: string): string {
+  const trimmed = rawText.trim()
+  if (!trimmed) return ""
+  try {
+    const json = JSON.parse(trimmed) as {
+      error?: unknown
+      message?: unknown
+      detail?: unknown
+    }
+    const serverMsg =
+      (typeof json.error === "string" && json.error.trim()) ||
+      (typeof json.message === "string" && json.message.trim()) ||
+      (typeof json.detail === "string" && json.detail.trim())
+    if (serverMsg) return serverMsg
+  } catch {
+    /* not JSON — use raw snippet */
+  }
+  return trimmed.slice(0, 500)
+}
+
 /**
  * POSTs to The One Eye workflow execute endpoint and returns a 0–100 integer score.
  *
@@ -51,7 +72,15 @@ async function executeScoringWorkflow(
     response,
   })
   if (!response.ok) {
-    throw new Error(`score_api_http_${response.status}`)
+    const rawText = await response.text()
+    let detail = parseScoreApiHttpErrorDetail(rawText)
+    if (!detail) {
+      detail = response.statusText?.trim() || `HTTP ${response.status}`
+    }
+    const safeDetail = detail.replace(/\s+/g, " ").trim().slice(0, 280)
+    throw new Error(
+      `score_api_http_${response.status}:${safeDetail || "request_failed"}`
+    )
   }
 
   const responseBody = (await response.json()) as { score?: unknown }

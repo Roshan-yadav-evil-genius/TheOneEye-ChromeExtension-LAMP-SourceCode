@@ -17,10 +17,11 @@ function createNotificationContainer(): HTMLDivElement {
     zIndex: String(NOTIFICATION_Z_INDEX),
     display: "flex",
     flexDirection: "column",
-    alignItems: "flex-end",
+    alignItems: "stretch",
     gap: "8px",
     pointerEvents: "none",
-    maxWidth: "min(360px, calc(100vw - 32px))",
+    width: "300px",
+    maxWidth: "300px",
     boxSizing: "border-box",
   } satisfies Partial<CSSStyleDeclaration> as CSSStyleDeclaration)
   return el

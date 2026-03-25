@@ -6,6 +6,12 @@ export function formatScoreServiceError(raw: string): string {
   const t = raw.trim()
   if (!t) return "Something went wrong while scoring."
 
+  const apiDetail = /^score_api_http_\d+:(.+)$/.exec(t)
+  if (apiDetail) {
+    const msg = apiDetail[1].trim()
+    if (msg && msg !== "request_failed") return msg
+  }
+
   const lower = t.toLowerCase()
   if (lower.includes("no_tab")) {
     return "Couldn’t reach this page. Try again."

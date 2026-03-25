@@ -12,10 +12,10 @@ import { buildEnrichedLinkedInProfilePayloadForContent } from "../VoyagerApi/ind
 function scoringStartMessage(payload: MarkerInteractionPayload): string {
   if (payload.kind === "profile") {
     const personName = payload.data.name.trim() || "profile"
-    return `Scoring ${personName}...`
+    return `Scoring ${personName}`
   }
   const personName = payload.data.publisher.name.trim() || "unknown person"
-  return `Scoring post of ${personName}...`
+  return `Scoring post of ${personName}`
 }
 
 /** Restores profile score from cache or sets marker to error. */

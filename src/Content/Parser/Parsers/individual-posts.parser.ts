@@ -24,7 +24,7 @@ const XPATH_POST = {
 export function matchesFeedPostsLocation(loc: Location): boolean {
   if (!matchesExtensionHost(loc)) return false
   const p = loc.pathname.replace(/\/+$/, "") || "/"
-  const feed_page = p.includes("/feed/")
+  const feed_page = p.includes("feed")
   const search_page = p.includes("/search/results")
 
   return feed_page || search_page
