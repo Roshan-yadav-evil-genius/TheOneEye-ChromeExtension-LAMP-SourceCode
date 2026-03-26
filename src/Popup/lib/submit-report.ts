@@ -1,6 +1,7 @@
 import type { ReportIssuePayload } from "@/types/extension-settings"
+import { WORKFLOW_API_BASE_URL } from "../../shared/api-config.ts"
 
-const REPORT_API_BASE = "http://127.0.0.1:7878/api/workflow"
+const REPORT_API_BASE = WORKFLOW_API_BASE_URL
 const REPORT_WORKFLOW_ID = "1771881b-6d1e-4b5d-b645-5df14e0374d1"
 
 const REPORT_API_HEADERS = {

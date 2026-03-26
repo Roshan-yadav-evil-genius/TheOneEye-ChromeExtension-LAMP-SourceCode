@@ -2,8 +2,9 @@ import type { Post } from "../../Content/types.ts"
 import type { EnrichedLinkedInProfilePayload } from "../../Content/VoyagerApi/types.ts"
 import type { ScoringIntentionSnapshot } from "../../shared/get-intention-from-chrome.ts"
 import type { ScoringSettingsBundle } from "../../shared/get-scoring-settings-from-chrome.ts"
+import { WORKFLOW_API_BASE_URL } from "../../shared/api-config.ts"
 
-const SCORE_API_BASE = "http://127.0.0.1:7878/api/workflow"
+const SCORE_API_BASE = WORKFLOW_API_BASE_URL
 const POST_WORKFLOW_ID = "f141f826-c899-4d2b-83d6-300b0e8eb02d"
 const PROFILE_WORKFLOW_ID = "26f0a457-b6d6-47fe-bea1-b991d097d48e"
 
