@@ -10,7 +10,7 @@ export function KeywordTagInput() {
   return (
     <IntentionTagInput
       title="Keywords"
-      placeholder="Type a keyword and press Enter or comma"
+      placeholder="Keyword — Enter, comma, or paste a comma/newline-separated list"
       tags={keywords}
       onAdd={addKeyword}
       onRemove={removeKeyword}

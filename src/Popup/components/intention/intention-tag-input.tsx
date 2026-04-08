@@ -3,6 +3,7 @@ import { useCallback, useState } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { splitIntentionInputSegments } from "@/lib/normalize-intention-tag"
 
 type Props = {
   /** Omit or leave empty when the parent supplies a description heading. */
@@ -24,9 +25,39 @@ export function IntentionTagInput({
   const [draft, setDraft] = useState("")
 
   const commitDraft = useCallback(() => {
-    onAdd(draft)
+    const segments = splitIntentionInputSegments(draft)
+    for (const segment of segments) {
+      onAdd(segment)
+    }
     setDraft("")
   }, [onAdd, draft])
+
+  const onPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData("text/plain")
+    if (!pasted || !/[,\n]/.test(pasted)) return
+
+    e.preventDefault()
+    let segments = splitIntentionInputSegments(pasted)
+    const prefix = draft.trim()
+    if (prefix) {
+      if (segments.length === 0) {
+        onAdd(prefix)
+      } else {
+        segments = [
+          `${prefix} ${segments[0]}`.trim(),
+          ...segments.slice(1),
+        ]
+        for (const segment of segments) {
+          onAdd(segment)
+        }
+      }
+    } else {
+      for (const segment of segments) {
+        onAdd(segment)
+      }
+    }
+    setDraft("")
+  }
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -67,6 +98,7 @@ export function IntentionTagInput({
       <Input
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
+        onPaste={onPaste}
         onKeyDown={onKeyDown}
         onBlur={() => {
           if (draft.trim()) commitDraft()

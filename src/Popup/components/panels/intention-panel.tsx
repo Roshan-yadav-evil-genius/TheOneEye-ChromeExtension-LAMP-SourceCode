@@ -54,7 +54,7 @@ export function IntentionPanel() {
           </Tooltip>
         </div>
         <IntentionTagInput
-          placeholder="Type a headline cue and press Enter or comma"
+          placeholder="Headline cue — Enter, comma, or paste a comma/newline-separated list"
           tags={headlineTags}
           onAdd={addHeadlineTag}
           onRemove={removeHeadlineTag}

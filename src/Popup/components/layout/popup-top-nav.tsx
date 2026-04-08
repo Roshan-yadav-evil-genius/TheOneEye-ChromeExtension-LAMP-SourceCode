@@ -30,7 +30,7 @@ export function PopupTopNav() {
       <div className="flex min-w-0 items-center gap-1.5 pr-1">
         <img src={TheOneEyeLogo} alt="TheOneEye" width={42}/>
         <span className="truncate text-xs font-semibold tracking-tight">
-          TheOneEye
+          TheOneEye(v0.1.0)
         </span>
       </div>
       <nav
